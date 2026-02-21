@@ -21,20 +21,7 @@ export function handleApiGwError(error: any, defaultMessage: string, defaultStat
       headers,
       body: JSON.stringify({
         error: 'Parse error',
-        details: error.errors
-      })
-    }
-  }
-
-  // Handle Middy ParseError
-  if (error.name === 'ParseError') {
-    const details = error.message
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({
-        error: 'Parse error',
-        details
+        details: error.issues
       })
     }
   }
