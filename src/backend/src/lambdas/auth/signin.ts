@@ -3,6 +3,7 @@ import { getLogger } from '@/shared/logger/get-logger.js'
 import { CognitoProvider } from '@/providers/auth/cognito-provider.js'
 import { z } from 'zod'
 import { handleApiGwError } from '@/shared/errors/handle-api-gw-error.js'
+import { apiResponse } from '@/shared/http/api-response.js'
 
 const cognitoProvider = new CognitoProvider()
 const logger = getLogger()
@@ -21,19 +22,7 @@ export const signinHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 
     const { idToken, accessToken, expiresIn, refreshToken } = await cognitoProvider.signIn(email, password)
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({
-        accessToken,
-        idToken,
-        expiresIn,
-        refreshToken
-      })
-    }
+    return apiResponse(200, { accessToken, idToken, expiresIn, refreshToken })
   } catch (error) {
     return handleApiGwError(error, 'Error during signin')
   }

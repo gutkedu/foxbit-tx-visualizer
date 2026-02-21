@@ -3,6 +3,7 @@ import { getLogger } from '@/shared/logger/get-logger.js'
 import { CognitoProvider } from '@/providers/auth/cognito-provider.js'
 import { z } from 'zod'
 import { handleApiGwError } from '@/shared/errors/handle-api-gw-error.js'
+import { apiResponse } from '@/shared/http/api-response.js'
 
 const cognitoProvider = new CognitoProvider()
 const logger = getLogger()
@@ -22,16 +23,7 @@ export const resetPasswordHandler = async (event: APIGatewayProxyEvent): Promise
 
     await cognitoProvider.confirmForgotPassword(email, confirmationCode, newPassword)
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({
-        message: 'Password reset successful'
-      })
-    }
+    return apiResponse(200, { message: 'Password reset successful' })
   } catch (error) {
     return handleApiGwError(error, 'Error resetting password')
   }
