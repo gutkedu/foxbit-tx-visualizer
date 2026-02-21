@@ -67,6 +67,6 @@ export const authorizerHandler = async (
     return response
   } catch (err) {
     logger.error('Authorization failed', { error: err })
-    throw new Error('Unauthorized')
+    throw new Error('Unauthorized', { cause: err })
   }
 }
