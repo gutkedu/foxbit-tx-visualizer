@@ -3,11 +3,11 @@ import { getLogger } from '@/shared/logger/get-logger.js'
 import { CognitoProvider } from '@/providers/auth/cognito-provider.js'
 import { z } from 'zod'
 import { handleApiGwError } from '@/shared/errors/handle-api-gw-error.js'
-import { DynamoUserRepository } from '@/repositories/dynamodb/dynamo-user-repository.js'
+import { DrizzleUserRepository } from '@/repositories/dsql/drizzle-user-repository.js'
 import { apiResponse } from '@/shared/http/api-response.js'
 
 const cognitoProvider = new CognitoProvider()
-const dynamoUserRepo = new DynamoUserRepository()
+const userRepo = new DrizzleUserRepository()
 const logger = getLogger()
 
 const confirmSignupSchema = z.object({
@@ -22,7 +22,7 @@ export const confirmSignupHandler = async (event: APIGatewayProxyEvent): Promise
     const body = JSON.parse(event.body || '{}')
     const { email, confirmationCode } = confirmSignupSchema.parse(body)
 
-    const user = await dynamoUserRepo.getByEmail(email)
+    const user = await userRepo.getByEmail(email)
     if (!user) {
       logger.error('User not found')
       return apiResponse(404, { message: 'User not found' })
@@ -32,7 +32,7 @@ export const confirmSignupHandler = async (event: APIGatewayProxyEvent): Promise
 
     user.userConfirmed = true
 
-    await dynamoUserRepo.update(user)
+    await userRepo.update(user)
 
     logger.info('User confirmed successfully')
 
