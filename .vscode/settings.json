@@ -1,0 +1,9 @@
+{
+  "rest-client.environmentVariables": {
+    "dev": {
+      "baseUrl": "https://kq6uz3u23l.execute-api.us-east-1.amazonaws.com/api",
+      "email": "eduardo.pedogutkoski@gmail.com",
+      "password": "Senha123!"
+    }
+  }
+}

@@ -3,17 +3,14 @@ Transform: AWS::Serverless-2016-10-31
 Description: Transaction Visualizer - Backend Infrastructure Stack
 
 Parameters:
-  TableName:
+  Environment:
     Type: String
-    Description: Name of the DynamoDB table
-
-  UserPoolId:
-    Type: String
-    Description: ID of the Cognito User Pool
-
-  UserPoolClientId:
-    Type: String
-    Description: ID of the Cognito User Pool Client
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
 
 Resources:
   ##########################################################################
@@ -24,9 +21,12 @@ Resources:
     Properties:
       Location: ../../src/backend/template.yaml
       Parameters:
-        TableName: !Ref TableName
-        UserPoolId: !Ref UserPoolId
-        UserPoolClientId: !Ref UserPoolClientId
+        DSQLEndpoint: !ImportValue
+          'Fn::Sub': 'dsql-${Environment}-ClusterEndpoint'
+        UserPoolId: !ImportValue
+          'Fn::Sub': 'stateful-${Environment}-UserPoolId'
+        UserPoolClientId: !ImportValue
+          'Fn::Sub': 'stateful-${Environment}-UserPoolClientId'
 
 Outputs:
   ApiGatewayURL:

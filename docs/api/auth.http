@@ -1,0 +1,59 @@
+
+# Control Alt E: to switch to the environment variables file and set the baseUrl, email, and password for testing.
+
+### Sign Up
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "gutkedu",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Sign In
+# @name signIn
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Confirm Sign Up
+POST {{baseUrl}}/auth/confirm-signup
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "confirmationCode": "123456"
+}
+
+### Forgot Password
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Reset Password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "confirmationCode": "123456",
+  "newPassword": "{{password}}"
+}
+
+### Refresh Token
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+Authorization: Bearer {{signIn.response.body.$.accessToken}}
+
+{
+  "refreshToken": "{{signIn.response.body.$.refreshToken}}"
+}
+'

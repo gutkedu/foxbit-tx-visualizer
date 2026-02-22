@@ -31,7 +31,6 @@ export class SignUpUserUseCase {
     })
 
     const user = UserEntity.create({
-      id: userSub,
       email,
       username,
       cognitoSub: userSub,

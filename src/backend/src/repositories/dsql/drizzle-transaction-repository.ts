@@ -3,6 +3,7 @@ import { TransactionRepository } from '../transaction-repository.js'
 import { Exchange } from '@/core/enums/exchange.enum.js'
 import { getDb } from '@/db/client.js'
 import { transactions, TransactionRow } from '@/db/schema.js'
+import { IntegrationError } from '@/shared/errors/integration-error.js'
 
 // Compile-time check: every key in TransactionProps must exist as a column in TransactionRow.
 // If you add a field to TransactionProps but forget to add it to the schema, this errors.
@@ -12,23 +13,31 @@ void _assertTxSync
 
 export class DrizzleTransactionRepository implements TransactionRepository {
   async create(transaction: TransactionEntity): Promise<TransactionEntity> {
-    const db = await getDb()
-    const [row] = await db
-      .insert(transactions)
-      .values(this.toRow(transaction))
-      .returning()
-    return this.toEntity(row)
+    try {
+      const db = await getDb()
+      const [row] = await db
+        .insert(transactions)
+        .values(this.toRow(transaction))
+        .returning()
+      return this.toEntity(row)
+    } catch (error) {
+      throw new IntegrationError(`Failed to create transaction: ${(error as Error).message}`)
+    }
   }
 
   async batchCreate(txs: TransactionEntity[]): Promise<TransactionEntity[]> {
-    const db = await getDb()
-    return db.transaction(async (trx) => {
-      const rows = await trx
-        .insert(transactions)
-        .values(txs.map((t) => this.toRow(t)))
-        .returning()
-      return rows.map((r) => this.toEntity(r))
-    })
+    try {
+      const db = await getDb()
+      return db.transaction(async (trx) => {
+        const rows = await trx
+          .insert(transactions)
+          .values(txs.map((t) => this.toRow(t)))
+          .returning()
+        return rows.map((r) => this.toEntity(r))
+      })
+    } catch (error) {
+      throw new IntegrationError(`Failed to batch create transactions: ${(error as Error).message}`)
+    }
   }
 
   private toEntity(row: TransactionRow): TransactionEntity {
