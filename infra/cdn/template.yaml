@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Transaction Visualizer - CloudFront CDN Stack
+
+Parameters:
+  AppName:
+    Type: String
+    Default: foxbit-tx-visualizer
+    Description: Name of the application
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+Resources:
+  ##########################################################################
+  #                      Origin Access Identity                           #
+  ##########################################################################
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'OAI for ${AppName} frontend - ${Environment}'
+
+  ##########################################################################
+  #                         S3 Bucket Policy                              #
+  ##########################################################################
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue
+        'Fn::Sub': 'stateful-${Environment}-FrontendBucketName'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub
+              - '${BucketArn}/*'
+              - BucketArn: !ImportValue
+                  'Fn::Sub': 'stateful-${Environment}-FrontendBucketArn'
+
+  ##########################################################################
+  #                      CloudFront Distribution                          #
+  ##########################################################################
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub '${AppName} frontend - ${Environment}'
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub
+              - '${BucketName}.s3.${AWS::Region}.amazonaws.com'
+              - BucketName: !ImportValue
+                  'Fn::Sub': 'stateful-${Environment}-FrontendBucketName'
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          DefaultTTL: 86400
+          MinTTL: 0
+          MaxTTL: 31536000
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+      Tags:
+        - Key: Project
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  WebsiteURL:
+    Description: CloudFront URL
+    Value: !Sub 'https://${FrontendDistribution.DomainName}'
+    Export:
+      Name: !Sub 'cdn-${Environment}-WebsiteURL'
+
+  DistributionId:
+    Description: CloudFront distribution ID
+    Value: !GetAtt FrontendDistribution.Id
+    Export:
+      Name: !Sub 'cdn-${Environment}-DistributionId'
+
+  CloudFrontDomainName:
+    Description: CloudFront domain name
+    Value: !GetAtt FrontendDistribution.DomainName
+    Export:
+      Name: !Sub 'cdn-${Environment}-DomainName'

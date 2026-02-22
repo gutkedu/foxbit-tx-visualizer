@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Transaction Visualizer - Stateful Resources Stack
+
+Parameters:
+  AppName:
+    Type: String
+    Default: foxbit-tx-visualizer
+    Description: Name of the application
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+Resources:
+  ##########################################################################
+  #                               Cognito                                 #
+  ##########################################################################
+  CognitoStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./cognito.yaml
+      Parameters:
+        AppName: !Ref AppName
+
+  ##########################################################################
+  #                                  S3                                   #
+  ##########################################################################
+  S3Stack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./s3.yaml
+      Parameters:
+        AppName: !Ref AppName
+        Environment: !Ref Environment
+
+  ##########################################################################
+  #                           Parameter Store                             #
+  ##########################################################################
+  ParameterStoreStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./parameter-store.yaml
+      Parameters:
+        UserPoolId: !GetAtt CognitoStack.Outputs.UserPoolId
+        UserPoolClientId: !GetAtt CognitoStack.Outputs.UserPoolClientId
+        DSQLClusterEndpoint: !ImportValue
+            'Fn::Sub': 'dsql-${Environment}-ClusterEndpoint'
+        DSQLClusterIdentifier: !ImportValue
+            'Fn::Sub': 'dsql-${Environment}-ClusterIdentifier'
+        FilesBucketName: !GetAtt S3Stack.Outputs.FilesBucketName
+
+Outputs:
+  UserPoolId:
+    Description: ID of the Cognito User Pool
+    Value: !GetAtt CognitoStack.Outputs.UserPoolId
+    Export:
+      Name: !Sub 'stateful-${Environment}-UserPoolId'
+
+  UserPoolClientId:
+    Description: ID of the Cognito User Pool Client
+    Value: !GetAtt CognitoStack.Outputs.UserPoolClientId
+    Export:
+      Name: !Sub 'stateful-${Environment}-UserPoolClientId'
+
+  FilesBucketName:
+    Description: Name of the files S3 bucket
+    Value: !GetAtt S3Stack.Outputs.FilesBucketName
+    Export:
+      Name: !Sub 'stateful-${Environment}-FilesBucketName'
+
+  FilesBucketArn:
+    Description: ARN of the files S3 bucket
+    Value: !GetAtt S3Stack.Outputs.FilesBucketArn
+    Export:
+      Name: !Sub 'stateful-${Environment}-FilesBucketArn'
+
+  FrontendBucketName:
+    Description: Name of the frontend S3 bucket
+    Value: !GetAtt S3Stack.Outputs.FrontendBucketName
+    Export:
+      Name: !Sub 'stateful-${Environment}-FrontendBucketName'
+
+  FrontendBucketArn:
+    Description: ARN of the frontend S3 bucket
+    Value: !GetAtt S3Stack.Outputs.FrontendBucketArn
+    Export:
+      Name: !Sub 'stateful-${Environment}-FrontendBucketArn'

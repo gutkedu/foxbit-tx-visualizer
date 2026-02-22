@@ -1,0 +1,10 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "foxbit-tx-database-stack"
+region = "us-east-1"
+profile = "gutkedu-terraform"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+parameter_overrides = "Environment=dev DeletionProtection=false"

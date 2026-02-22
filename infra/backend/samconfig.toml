@@ -1,0 +1,10 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "foxbit-tx-backend-stack"
+region = "us-east-1"
+profile = "gutkedu-terraform"
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+confirm_changeset = false
+resolve_s3 = true
+parameter_overrides = "TableName=<table-name> UserPoolId=<user-pool-id> UserPoolClientId=<user-pool-client-id>"

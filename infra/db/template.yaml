@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Transaction Visualizer - Aurora DSQL Database Stack
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+  DeletionProtection:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable deletion protection for the DSQL cluster
+
+Conditions:
+  IsDeletionProtectionEnabled: !Equals [!Ref DeletionProtection, 'true']
+
+Resources:
+  ##########################################################################
+  #                          Aurora DSQL Cluster                          #
+  ##########################################################################
+  DSQLCluster:
+    Type: AWS::DSQL::Cluster
+    Properties:
+      DeletionProtectionEnabled: !If [IsDeletionProtectionEnabled, true, false]
+      Tags:
+        - Key: Name
+          Value: !Sub 'foxbit-tx-visualizer-dsql-${Environment}'
+        - Key: Project
+          Value: foxbit-tx-visualizer
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: SAM
+
+Outputs:
+  ClusterIdentifier:
+    Description: Aurora DSQL Cluster Identifier
+    Value: !GetAtt DSQLCluster.Identifier
+    Export:
+      Name: !Sub 'dsql-${Environment}-ClusterIdentifier'
+
+  ClusterEndpoint:
+    Description: Aurora DSQL Cluster Endpoint
+    Value: !GetAtt DSQLCluster.Endpoint
+    Export:
+      Name: !Sub 'dsql-${Environment}-ClusterEndpoint'

@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Transaction Visualizer - SSM Parameter Store
+
+Parameters:
+  UserPoolId:
+    Type: String
+    Description: ID of the Cognito User Pool
+
+  UserPoolClientId:
+    Type: String
+    Description: ID of the Cognito User Pool Client
+
+  DSQLClusterEndpoint:
+    Type: String
+    Description: Endpoint of the Aurora DSQL Cluster
+
+  DSQLClusterIdentifier:
+    Type: String
+    Description: Identifier of the Aurora DSQL Cluster
+
+  FilesBucketName:
+    Type: String
+    Description: Name of the files S3 bucket
+
+Resources:
+  ##########################################################################
+  #                         Cognito Parameters                            #
+  ##########################################################################
+  UserPoolIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /foxbit-tx-visualizer/cognito/user-pool-id
+      Type: String
+      Value: !Ref UserPoolId
+      Description: Cognito User Pool ID
+
+  UserPoolClientIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /foxbit-tx-visualizer/cognito/user-pool-client-id
+      Type: String
+      Value: !Ref UserPoolClientId
+      Description: Cognito User Pool Client ID
+
+  ##########################################################################
+  #                          DSQL Parameters                              #
+  ##########################################################################
+  DSQLClusterEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /foxbit-tx-visualizer/dsql/cluster-endpoint
+      Type: String
+      Value: !Ref DSQLClusterEndpoint
+      Description: Aurora DSQL Cluster Endpoint
+
+  DSQLClusterIdentifierParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /foxbit-tx-visualizer/dsql/cluster-identifier
+      Type: String
+      Value: !Ref DSQLClusterIdentifier
+      Description: Aurora DSQL Cluster Identifier
+
+  ##########################################################################
+  #                            S3 Parameters                              #
+  ##########################################################################
+  FilesBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /foxbit-tx-visualizer/s3/files-bucket-name
+      Type: String
+      Value: !Ref FilesBucketName
+      Description: Files S3 Bucket Name
+
+Outputs:
+  UserPoolIdParameterName:
+    Description: SSM Parameter name for Cognito User Pool ID
+    Value: !Ref UserPoolIdParameter
+
+  UserPoolClientIdParameterName:
+    Description: SSM Parameter name for Cognito User Pool Client ID
+    Value: !Ref UserPoolClientIdParameter
+
+  DSQLClusterEndpointParameterName:
+    Description: SSM Parameter name for DSQL Cluster Endpoint
+    Value: !Ref DSQLClusterEndpointParameter
+
+  DSQLClusterIdentifierParameterName:
+    Description: SSM Parameter name for DSQL Cluster Identifier
+    Value: !Ref DSQLClusterIdentifierParameter
+
+  FilesBucketNameParameterName:
+    Description: SSM Parameter name for Files Bucket Name
+    Value: !Ref FilesBucketNameParameter

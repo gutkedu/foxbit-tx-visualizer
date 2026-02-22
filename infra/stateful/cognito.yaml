@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Transaction Visualizer - Cognito Resources
+
+Parameters:
+  AppName:
+    Type: String
+    Description: Name of the application
+
+Resources:
+  ##########################################################################
+  #                           Cognito User Pool                           #
+  ##########################################################################
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${AppName}-UserPool'
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      EmailVerificationMessage: 'Your verification code is {####}'
+      EmailVerificationSubject: !Sub '${AppName} - Your verification code'
+      MfaConfiguration: 'OFF'
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      DeletionProtection: ACTIVE
+
+  ##########################################################################
+  #                         Cognito User Pool Client                      #
+  ##########################################################################
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${AppName}-UserPoolClient'
+      GenerateSecret: false
+      UserPoolId: !Ref UserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 30
+      IdTokenValidity: 30
+      RefreshTokenValidity: 7
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+
+Outputs:
+  UserPoolId:
+    Description: ID of the Cognito User Pool
+    Value: !Ref UserPool
+
+  UserPoolArn:
+    Description: ARN of the Cognito User Pool
+    Value: !GetAtt UserPool.Arn
+
+  UserPoolClientId:
+    Description: ID of the Cognito User Pool Client
+    Value: !Ref UserPoolClient

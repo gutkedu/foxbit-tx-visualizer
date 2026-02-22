@@ -1,0 +1,10 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "foxbit-tx-cdn-stack"
+region = "us-east-1"
+profile = "gutkedu-terraform"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+parameter_overrides = "AppName=foxbit-tx-visualizer Environment=dev"
